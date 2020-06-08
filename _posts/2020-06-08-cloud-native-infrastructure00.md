@@ -20,7 +20,7 @@ background: '/img/bg-post.jpg'
 
 # 클라우드 네이티브 인프라스트럭처
 
-<img src="https://img.ridicdn.net/cover/3649000004/xxlarge" width="40%" height="30%" title="px(픽셀) 크기 설정" alt="RubberDuck"></img></br>
+<img src="https://img.ridicdn.net/cover/3649000004/xxlarge" width="40%" height="30%" title="클라우드 네이티브 인프라스트럭처" alt="클라우드 네이티브 인프라스트럭처"/>
 
 ## 도서 정보
 </br>
