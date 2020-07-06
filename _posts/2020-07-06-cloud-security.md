@@ -6,6 +6,8 @@ date: 2020-07-06 20:10:11 -0400
 background: '/img/posts/02.jpg'
 ---
 
+
+
 ## Host OS형 가상화 실습  
 
 ### VirtualBox  
@@ -65,6 +67,7 @@ exit
 **bcdedit /set ypervisorlaunchtype off, Windows 기능 켜기/끄기의 hyper-v, wsl 기능 끄기**를 통해 해결  
 
 * 원인  
+
 1. virtual box와 hyper-v가 충돌하였기에 발생하는 문제  
 
 2. VirtualBox 및 VMware Workstation 등은 레벨 2 하이퍼바이저  
@@ -85,6 +88,7 @@ exit
 Apache가 다중 처리 모듈(Multi Processing Module)을 사용하는 반면 Nginx는 Event driven 방식으로 구동  
 
 * How?  
+
 ```shell
 sudo passwd
 sudo yum update
@@ -118,9 +122,10 @@ systemctl enable nginx
 * What?  
 확장성 있는 네트워크 애플리케이션 개발에 사용되는 소프트웨어 플랫폼  
 
-자바스크립트에서 외부에서 실행할 수 있는 Runtime 환경을 Chrome V8 엔진을 제공하여 여러 OS에서 실행할 수 있게 실행 환경을 제공하는 것   
+자바스크립트에서 외부에서 실행할 수 있는 Runtime 환경을 Chrome V8 엔진을 제공하여 여러 OS에서 실행할 수 있게 실행 환경을 제공하는 것  
 
 * How?  
+
 ```shell
 sudo passwd
 sudo yum update
