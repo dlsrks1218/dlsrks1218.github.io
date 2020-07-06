@@ -8,8 +8,6 @@ background: '/img/posts/02.jpg'
 
 ## Host OS형 가상화 실습  
 
-## VirtualBox + Vagrant  
-
 ### VirtualBox  
 
 * H/W 가상화 소프트웨어  
