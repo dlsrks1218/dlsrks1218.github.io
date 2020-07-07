@@ -2,7 +2,7 @@
 layout: post
 title: "클라우드 보안 융합 전문가 과정"
 subtitle: "그림으로 배우는 클라우드 1일차"
-date: 2020-07-03 20:10:11 -0400
+date: 2020-07-03 20:10:11 -0400 
 background: '/img/posts/01.jpg'
 ---
 
