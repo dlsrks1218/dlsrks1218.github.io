@@ -6,8 +6,6 @@ date: 2020-07-09 20:10:11 -0400
 background: '/img/posts/03.jpg'
 ---
 
-# 7월 9일 python 3일차  
-
 ## 자료구조  
 
 * 스택 : LIFO  
