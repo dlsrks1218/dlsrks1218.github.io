@@ -197,7 +197,7 @@ background: '/img/posts/05.jpg'
 
   * <~>에 들어갈 수 있는 명령어(image, container, network, volume, system)  
 
-
+* docker system info - 도커가 사용하고 있는 시스템 상황  
 
 ---
 
@@ -243,8 +243,8 @@ hostname -i
 ```shell
 # mysql 공식 이미지 설치
 docker pull mysql:5.7
-# -p (포트포워딩) Container 포트:Host 포트
-# -e (환경변수 지정)
+# -p (publish, 포트포워딩) Container 포트:Host 포트
+# -e (environment, 환경변수 지정)
 # --name (컨테이너 이름)
 # 마지막은 이미지이름(tag 포함)
 docker run --rm -p 3306:3306 -e MYSQL_ALLOW_EMPTY_PASSWORD=true --name mysql mysql:5.7
@@ -372,4 +372,78 @@ kubectl edit service nginx-test # (ClusterIp -> NodePort)
 ## 확인 (port는 service에서 forwarding 된 port 사용)
 http://192.168.56.10:30039/ # (<- port forwarding)
 http://192.168.56.11:30039/ # (<- port forwarding)
+```  
+
+* 3번 노드(node3)는 도커가 아닌 로컬에 mysql 클라이언트 설치  
+
+```shell
+yum install -y mysql
+# -h(접속할 호스트) node1 -> node3(mysql)
+mysql -h 192.168.56.11 -u root -p
+
+# node2의 도커에 mysql(이름:mysql2) 설치하고 node2(docker(mysql))에서 node1(mysql)에 접속
+## node2에서
+docker exec -it mysql2 /bin/bash
+mysql -h 192.168.56.11 -u root -p
+
+
+```
+
+```shell
+# 도커가 사용하고 있는 리소스 확인
+docker system info
+# 도커가 사용하고 있는 디스크 크기 확인
+docker system df
+# 시스템의 용량 확인
+df -h
+```
+
+* 노드1에 웹 서버(Nginx) 구동 실습  
+
+```shell
+docker search nginx
+docker pull nginx:latest
+# 80(container):80(centos), Host - 18000(MacOS)
+docker run --rm -d -p 80:80 --name webserver nginx:latest
+# 호스트 pc에서 확인하려면
+http://localhost:18000
+# 컨테이너 상태 확인
+docker stats webserver
+# 컨테이너 로그 확인
+docker logs webserver
+# nginx 이미지를 나만의 태그를 달아
+docker tag nginx:latest dlsrks1218/nginx:v1.0
+# 도커 로그인
+docker login
+# 도커 허브에 내 이미지 푸시
+docker push dlsrks1218/nginx:v1.0
+
+# mysql 이미지를 내 태그 달아 푸시
+docker tag mysql:5.7 dlsrks1218/mysql:v1.0
+docker push dlsrks1218/mysql:v1.0
+# node3에서 내 mysql 이미지 풀해서 컨테이너 생성
+docker pull dlsrks1218/mysql:v1.0
+## mysql 컨테이너 실행시 -e 옵션 필수
+docker run --rm -p 3306:3306 -e MYSQL_ALLOW_EMPTY_PASSWORD=true --name mysql dlsrks1218/mysql:v1.0
+```
+
+---
+
+## 발생한 이슈  
+
+### 1. Centos ssh 붙을때 backward, forward-word 안되서 키바인딩 추가로 해결  
+
+```shell
+# Centos ssh 붙을때 backward, forward-word 키바인딩 추가
+vi ~/.bash_profile
+bind '"\e\e[C": forward-word'
+bind '"\e\e[D": backward-word'
+```
+
+### 2. 도커 mysql 컨테이너 실행 시 -e 환경변수 옵션을 안주면 아무것도 실행안됨  
+
+```shell
+# mysql 컨테이너 실행 시 -e 옵션이 없으면 아무것도 실행안됨
+# docker run --rm -d -p 3306:3306 --name mysql3 dlsrks1218/mysql:v1.0
+docker run --rm -p 3306:3306 -e MYSQL_ALLOW_EMPTY_PASSWORD=true --name mysql3 dlsrks1218/mysql:v1.0
 ```  
