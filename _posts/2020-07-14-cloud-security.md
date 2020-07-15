@@ -52,16 +52,6 @@ background: '/img/posts/04.jpg'
 
 ---
 
-## 도커  
-
-### 정의  
-
-* 컨테이너 기반 가상화 솔루션  
-
-* 필요한 조각들을 레이어로 추가하여 사용할 수 있는 환경  
-
----
-
 ## 리눅스 명령어  
 
 ### 파일과 디렉토리  
@@ -253,8 +243,8 @@ $ echo $SOME
 * alias : 긴 문장을 짧게 표현해주기 위한 명령어  
 
 ```shell  
-$ alias li='ls -l --color=auto'
-$ li
+alias li='ls -l --color=auto'
+li
 ```
 
 ### ~/.bash_profile  
@@ -325,6 +315,4 @@ su vi /etc/hosts
 mv k8s/.vagrant/machines/node1/virtualbox/private_key -> k8s/.vagrant/machines/node1/virtualbox/node1_private_key
 mv k8s/.vagrant/machines/node2/virtualbox/private_key -> k8s/.vagrant/machines/node2/virtualbox/node2_private_key
 mv k8s/.vagrant/machines/node3/virtualbox/private_key -> k8s/.vagrant/machines/node3/virtualbox/node3_private_key
-
-
 ```  
