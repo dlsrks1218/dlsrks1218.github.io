@@ -438,6 +438,11 @@ docker run --rm -p 3306:3306 -e MYSQL_ALLOW_EMPTY_PASSWORD=true --name mysql dls
 vi ~/.bash_profile
 bind '"\e\e[C": forward-word'
 bind '"\e\e[D": backward-word'
+
+# 명령어로 추가하기
+echo "bind '\"\\e\\e[C\": forward-word'" >> ~/.bash_profile
+echo "bind '\"\\e\\e[D\": backward-word'" >> ~/.bash_profile
+source ~/.bash_profile
 ```
 
 ### 2. 도커 mysql 컨테이너 실행 시 -e 환경변수 옵션을 안주면 아무것도 실행안됨  
