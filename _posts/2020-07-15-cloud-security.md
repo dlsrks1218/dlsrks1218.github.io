@@ -202,7 +202,6 @@ Debian계열, RedHat 계열 등등이 존재
 
 * SELinux(Security-Enhanced Linux) : 리눅스 커널에 강제 액세스 제어 기능을 추가한 기능  
 
-
 ### 디렉토리의 계층 구조  
 
 * 트리 구조이며 루트 디렉토리(/) 한 개 휘하의 서브 디렉토리 여러 개  
@@ -221,12 +220,11 @@ Debian계열, RedHat 계열 등등이 존재
 
   6. /etc - 각종 설정 파일  
 
-
 ## 미들웨어  
 
 ### 웹 서버 / 웹 애플리케이션 서버  
 
-* 웹서버 : 클라이언트가 보내온 HTTP 요청을 받아 웹 콘텐츠를 응답으로 반환하거나 다른 서버사이드 프로그램을 호출하는 기능을 가진 서버    
+* 웹서버 : 클라이언트가 보내온 HTTP 요청을 받아 웹 콘텐츠를 응답으로 반환하거나 다른 서버사이드 프로그램을 호출하는 기능을 가진 서버  
 
   * Apache HTTP server - 오픈소스 웹서버, 폭넓게 사용되어왔음  
 
@@ -408,7 +406,7 @@ hostname -i
 ```shell
 # mysql 공식 이미지 설치
 docker pull mysql:5.7
-# -p (publish, 포트포워딩) Container 포트:Host 포트
+# -p (publish, 포트포워딩) Host 포트:Container 포트
 # -e (environment, 환경변수 지정)
 # --name (컨테이너 이름)
 # 마지막은 이미지이름(tag 포함)
@@ -550,8 +548,6 @@ mysql -h 192.168.56.11 -u root -p
 ## node2에서
 docker exec -it mysql2 /bin/bash
 mysql -h 192.168.56.11 -u root -p
-
-
 ```
 
 ```shell
