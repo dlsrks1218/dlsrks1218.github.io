@@ -366,7 +366,7 @@ systemctl restart docker
 docker pull <image of myregistry>
 ```
 
-### 3. 스웜 구성한 서비스는 매니저에서 종료해주어야함(워커에서 컨테이너 종료는 의미가 없음), 서비스 종료시 구축했던 프라이빗 레지스트리 컨테이너를 구성한 docker-compose의 상태가 Exited가 됨 -> 왜일까  
+### 3. 스웜 구성한 서비스는 매니저에서 종료해주어야함(워커에서 컨테이너 종료는 의미없음), 서비스 종료시 구축했던 프라이빗 레지스트리 컨테이너를 구성한 docker-compose의 상태가 Exited가 됨 -> 왜일까  
 
 ### 4. docker swarm leave는 워커들 부터 수행 후 리더는 --force 옵션이 필요함  
 
