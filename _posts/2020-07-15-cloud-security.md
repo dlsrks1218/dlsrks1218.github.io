@@ -438,6 +438,8 @@ vagrant ssh node1, 2, 3
 
 * 모든 노드에 대해 수행할 것  
 
+* **CentOS에 도커 설치**  
+
 ```shell
 # 루트계정 비밀번호 설정
 su -
@@ -470,6 +472,8 @@ password: dockeradmin
 usermod -aG docker dockeradmin
 systemctl enable --now docker && systemctl start docker
 ```
+
+* **CentOS에 쿠버네티스 설치**  
 
 ```shell
 # 모든 시스템 디렉토리의 값 읽기

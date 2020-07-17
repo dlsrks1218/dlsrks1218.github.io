@@ -291,7 +291,7 @@ docker images
 
 docker run --rm -d -p 80:80 --name mywebserver mywebserver:1.0
 
-curl -X GET http://localhost
+curl -X GET http://localhost:18000
 ```  
 
 * 퀴즈 3  
@@ -308,4 +308,4 @@ docker run --rm -d -p 80:80 -v /root/work/html:/usr/share/nginx/html --name lab4
 
 ## 이슈  
 
-### nginx 포트는 80이다, 8080하지마라 멍충아  
+### nginx 포트는 80이다, 8080하지마라 멍충아, 8080은 nodejs다  
