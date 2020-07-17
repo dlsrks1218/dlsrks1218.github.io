@@ -113,6 +113,7 @@ vi /etc/docker/daemon.json
 }
 
 systemctl restart docker
+
 docker run --rm -d -p 80:80 manager:5000/example/docker-nginx
 
 http://localhost:38000
@@ -121,22 +122,6 @@ http://localhost:38000
 * 추후 문제 낼 수 있는 것  
 
   * 우분투 혹은 센트os 이미지에서 nginx 혹은 nodejs를 설치해보세요  
-
-## 이슈  
-
-### 1. ubuntu 이미지 베이스로 nginx 설치시 index.html이 존재할 루트 디렉토리가 /usr/share/nginx/html 이 아니라 /var/www/html 이므로 도커파일 작성시 주의할 것  
-
-### 2. 프라이빗 레지스트리 구축해서 올려놓은 이미지를 다운 받으려고 할 때, 기본으로 https 프로토콜 사용함. https 설정을 안하면 에러가 나므로 http로 우회시켜 주거나 인증서 등록이 필요함  
-
-```shell
-vi /etc/docker/daemon.json
-{
-  "insecure-registries" : ["myregistrydomain.com:5000"]
-}
-systemctl restart docker
-
-docker pull <image of myregistry>
-```
 
 ## Docker 네트워크  
 
@@ -147,6 +132,7 @@ docker pull <image of myregistry>
 ### 도커 네트워크 실습  
 
 ```shell
+# docker inspect <컨테이너>
 "Networks": {
     "bridge": {
         "IPAMConfig": null,
@@ -292,7 +278,7 @@ curl -X GET http://localhost:5000/v2/_catalog
 
 * 가용성(Availability)  
 
-시스템에 오류나, 고장이 발생해도 다른 정상적인 서버나 하드웨어가 대신해서 치를 계속해주어 신뢰성 확보  
+시스템에 오류나, 고장이 발생해도 다른 정상적인 서버나 하드웨어가 대신해서 처리를 계속해주어 신뢰성 확보  
 
 * 확장성(Scalability)  
 
@@ -304,15 +290,8 @@ curl -X GET http://localhost:5000/v2/_catalog
 
 ```shell
 # manager 노드 - 스웜모드 활성화, advertise-addr(사용할 ip 주소 지정)
+# 명령어 수행 결과 중 docker swarm join --token ~~ 이하 명령어를 기억해두고 워커가 될 노드들에 수행해야함
 docker swarm init --advertise-addr 192.168.56.14
-# 위 명령어 수행 결과 중 docker swarm join --token ~~ 이하 명령어를 기억해두고 워커가 될 노드들에 수행해야함
-Swarm initialized: current node (b17ql8b2pgscnz68z77o0sj6p) is now a manager.
-
-To add a worker to this swarm, run the following command:
-
-    docker swarm join --token SWMTKN-1-0hx4n5xvqcxnoxiq8dpdy0gubrcxxefu7acjib7tnzcpfjbrnt-bvvmtm052olmpxvc34veraqm8 192.168.56.14:2377
-
-To add a manager to this swarm, run 'docker swarm join-token manager' and follow the instructions.
 # node 1,2,3 - 생성된 스웜에 worker로 참여
 docker swarm join --token SWMTKN-1-0hx4n5xvqcxnoxiq8dpdy0gubrcxxefu7acjib7tnzcpfjbrnt-bvvmtm052olmpxvc34veraqm8 192.168.56.14:2377
 # 이미 조인한 워커일 경우 docker swarm leave를 해주어야함
@@ -355,18 +334,45 @@ docker swarm leave
 ```shell
 # manager에서 docker-compose를 통해 registry 컨테이너 실행
 docker-compose up
-# node 1,2,3 - docker image 다운받기
-docker pull manager:5000/example/docker-nginx
+# node 1,2,3 - docker image 다운받기 -> 안해도 서비스 생성때 레플리카셋 늘리면 자동으로 다운됨
+# docker pull manager:5000/example/docker-nginx
 # manager - 스웜 생성
 docker swarm init --advertise-addr 192.168.56.14
 # node 1,2,3 - swarm 참여
 docker swarm join --token SWMTKN-1-0gudqx54or73foxsbbzwf062yh6tf8f4e8vx2dm45hqstghwsd-8oori6gtf7bth8abuj0zyezwp 192.168.56.14:2377
 # manager - docker service 생성
 docker service create --replicas 1 -p 80:80 --name my-nginx manager:5000/example/docker-nginx
-# manager에서 서비스 확인 
+# manager에서 서비스 확인
 docker service ls
 # manager에서 스케일 아웃
 docker service scale my-nginx=6
 # manager에서 스웜 참가 노드 확인
 docker service ps my-nginx
+```
+
+## 이슈  
+
+### 1. ubuntu 이미지 베이스로 nginx 설치시 index.html이 존재할 루트 디렉토리가 /usr/share/nginx/html 이 아니라 /var/www/html 이므로 도커파일 작성시 주의할 것  
+
+### 2. 프라이빗 레지스트리 구축해서 올려놓은 이미지를 다운 받으려고 할 때, 기본으로 https 프로토콜 사용함. https 설정을 안하면 에러가 나므로 http로 우회시켜 주거나 인증서 등록이 필요함  
+
+```shell
+vi /etc/docker/daemon.json
+{
+  "insecure-registries" : ["myregistrydomain.com:5000"]
+}
+systemctl restart docker
+
+docker pull <image of myregistry>
+```
+
+### 3. 스웜 구성한 서비스는 종료해주어야함, 서비스 종료시 구축했던 프라이빗 레지스트리 컨테이너를 구성한 docker-compose의 상태가 Exited가 됨 -> 왜일까  
+
+### 4. docker swarm leave는 워커들 부터 수행 후 리더는 --force 옵션이 필요함  
+
+```shell
+docker service rm <서비스명>
+# node 1,2,3 부터 leave 후 리더는 --force 옵션 필요
+docker swarm leave
+docker swarm leave --force
 ```
