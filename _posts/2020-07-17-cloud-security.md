@@ -222,17 +222,17 @@ docker-compose -version
 ```shell
 vi docker-compose.yml
 version: "3.1"
-services: 
+services:
   registry:
     # docker run --name registry
     container_name: registry
     # FROM registry:latest
     image: registry:latest
     # docker run -p 5000:5000
-    ports: 
+    ports:
       - 5000:5000
     # docker run -v ./registry-data:/var/lib/registry
-    volumes: 
+    volumes:
       # 현재 디렉토리에 없는 폴더면 생성도 해줌
       - "./registry-data:/var/lib/registry"
 
