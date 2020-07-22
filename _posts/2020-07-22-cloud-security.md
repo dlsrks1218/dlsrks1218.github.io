@@ -179,7 +179,6 @@ show tables;
 
 * DCL : GRANT REVOKE  
 
-
 ### host에서 도커 mysql 접속 실습
 
 ```shell
