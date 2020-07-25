@@ -379,18 +379,42 @@ select count(*) as '홍길동 팀장 밑에서 일하는 사원 수' from Employ
 select hoursworked, deptname, name
 from Works as W, Employee as E, Department as D
 where W.empno=E.empno and E.deptno=D.deptno
-order by deptname, name
+order by deptname, name;
+# 같은 답이지만 문제가 애매하다고 하심
+select deptno, name, SUM(hoursworked)
+from Employee, Works
+where Employee.empno=Works.empno
+group by deptno, name
+order by deptno, name;
 # 두 명 이상의 사원이 참여한 프로젝트의 번호, 이름, 사원의 수를 보이시오.
 select W.projno, P.projname, count(*) as '사원 수'
 from Employee as E, Project as P, Works as W
 where W.projno = P.projno and E.empno=W.empno
 group by W.projno
 having count(*) >= 2;
+
+select P.projno, P.projname, count(name) as '사원수'
+from Employee as E, Project as P
+where E.deptno=P.deptno
+group by P.projno, P.projname
+having count(*) >= 2;
+
 # 세 명 이상의 사원이 있는 부서의 사원 이름을 보이시오.
+# 팀장 포함 X
 select E.name
 from Employee as E, Department as D
 where E.position!='Manager' and E.deptno = D.deptno and D.deptname = (
     select D.deptname
+    from Employee as E, Department as D
+    where E.deptno=D.deptno
+    group by D.deptname
+    having count(*) >= 3
+);
+# 팀장 포함
+select E.name
+from Employee as E, Department as D
+where E.deptno=D.deptno and D.deptname=(
+    select deptname
     from Employee as E, Department as D
     where E.deptno=D.deptno
     group by D.deptname
@@ -406,4 +430,4 @@ where E.position!='Manager' and E.deptno = D.deptno and D.deptname = (
 
 ```sql
 ALTER TABLE <테이블이름> CONVERT TO character SET utf8;
-```
+```  
