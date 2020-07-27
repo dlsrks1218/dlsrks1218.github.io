@@ -92,7 +92,7 @@ SELECT name FROM Customer WHERE custid IN (
 
 테이블 구성, 속성에 관한 제약 정의, 기본키 및 외래키 정의  
 
-CREATE, UPDATE, ALTER  
+CREATE, UPDATE, ALTER, DROP  
 
 * CREATE(Primary Key는 여럿이 와도 됨 - 복합키)
 
@@ -110,7 +110,7 @@ CREATE TABLE 테이블이름
 
 * CREATE 문에서 Foriegn Key 지정 시 제약  
 
-  * 외래키 제약조건을 명시할 때는 반드시 참조되는 테이블(부모 릴레이션)이 존재해야 하며(참조 무결성 제약) 참조되는 테이블의 기본키여야 함  
+  * **외래키 제약조건을 명시할 때는 반드시 참조되는 테이블(부모 릴레이션)이 존재해야 하며(참조 무결성 제약) 참조되는 테이블의 기본키여야 함**  
 
   * ON DELETE 또는 ON UPDATE 옵션은 참조되는 테이블의 튜플이 삭제되거나 수정될 때 취할 수 있는 동작을 지정함  
 
