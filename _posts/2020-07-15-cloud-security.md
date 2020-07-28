@@ -468,7 +468,7 @@ yum update -y && yum install docker-ce -y
 # 직접 사용자 및 비밀번호 입력하기
 useradd dockeradmin
 passwd dockeradmin
-password: dockeradmin
+password: dlsrks123
 usermod -aG docker dockeradmin
 systemctl enable --now docker && systemctl start docker
 ```
@@ -532,7 +532,7 @@ http://192.168.56.10:8001/api/v1/namespaces/kube-system/services/https:kubernete
 ## Pod 실행
 kubectl run nginx-test --image=nginx --port 80 --generator=run-pod/v1
 ## Service 실행
-kubectl expose pod nginx-test 
+kubectl expose pod nginx-test
 kubectl get services
 ## Service Type 변경
 kubectl edit service nginx-test # (ClusterIp -> NodePort)

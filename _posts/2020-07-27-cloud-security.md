@@ -147,12 +147,9 @@ IP : 192.168.56.12(Slave), 192.168.56.13(Slave)
 1. MySQL DB, 계정 생성 및 권한 설정
     # 위 덤프파일을 받아 열어보면 디비 생성에 관한 파트는 없으므로 직접 생성할것
     mysql> create database repl_db default character set utf8;
-    mysql> grant all privileges on repl_db.* to user1@'%' identified by 'test1234';
-    mysql> grant all privileges on repl_db.* to user1@'%' with grant option (8.0버전에서);
     mysql> create user user1@'%' identified by 'test1234';
-
-    # 덤프파일 임포트하여 repl_db로 넣겠다
-    $ mysqldump -u root -p --databases repl_db repl_db < /home/vagrant/repl_db_backup.sql
+    mysql> grant all privileges on repl_db.* to user1@'%' identified by 'test1234';
+    mysql> grant all privileges on repl_db.* to user1@'%' with grant option; (8.0버전에서);
 
 2. MySQL 설정 - my.cnf
     $ vi /etc/my.cnf (maxos vi /usr/local/etc/my.cnf)
@@ -161,19 +158,47 @@ IP : 192.168.56.12(Slave), 192.168.56.13(Slave)
         replicate-do-db='repl_db'
 3. MySQL 복원
     Master DBMS에서 복제할 데이터베이스를 dump하여 복원 (create database repl_db)
+    # 덤프파일 임포트하여 repl_db로 넣겠다
+    # $ mysqldump -u root -p --databases repl_db repl_db < /home/vagrant/repl_db_backup.sql
+    $ mysql -u root -p --force --database repl_db < /home/vagrant/repl_db_backup.sql
 4. MySQL 재시작
     $ service mysqld restart (or systemctl restart mysqld)
 5. Master 서버로 연결하기 위한 설정
     mysql> change master to
-    master_host='192.168.65.148', <- MASTER 서버 IP (또는 macos의 IP와 port forwarding 이용)
+    master_host='192.168.56.11', # MASTER 서버 IP (또는 macos의 IP와 port forwarding 이용)
     master_user='repl_user',
     master_password='test4567',
-    master_log_file='mysql-bin.000010',
-    master_log_pos=1487;  <- MASTER STATUS에서 position 값
-    (master_port=13306; <- 필요시 포트 번호 지정. 예, macos 에서 centos)
+    master_log_file='mysql-bin.000001',
+    master_log_pos=154;  # MASTER STATUS에서 position 값
+    (master_port=13306; # 필요시 포트 번호 지정. 예, macos 에서 centos)
 6. MySQL 재시작
     $ service mysqld restart (or systemctl restart mysqld)
+7. 확인
+    mysql> show slave status # Slave_IO_Running 확인
+    mysql> show slave status # grep Slave_SQL_Running 확인
+```
 
+```shell
+** Replicate 상태 확인
+1. Master 서버 상태 보기
+    mysql> show processlist\G;
+2. Slave 서버 상태 보기
+    mysql> show processlist\G;
+    mysql> show slave status\G;
+        Read_Master_Log_Pos:    <- Master의 Log position과 일치 해야 함
+        Slave_IO_Running:       <- Yes 이어야 함
+        Salve_SQL_Running:      <- Yes 이어야 함
+3. Salve_SQL_Running: No 일 경우
+    mysql> STOP SLAVE;
+    mysql> SET GLOBAL SQL_SLAVE_SKIP_COUNTER = 1;
+    mysql> START SLAVE;
+    mysql> SHOW SLAVE STATUS \G
+    $ grep mysql /var/log/syslog
+4. Last_Error: 발생 시
+    $ vi /etc/my.cnf
+        [mysqld]
+        slave-skip-errors=all 
+    $ service mysqld restart 
 ```
 
 ## 이슈  

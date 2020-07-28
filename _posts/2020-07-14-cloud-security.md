@@ -265,6 +265,8 @@ su vi /etc/hosts
 192.168.56.11 node1
 192.168.56.12 node2
 192.168.56.13 node3
+192.168.56.14 manager
+
 #Xshell에서 공개키 기반 접속하면서 각 프라이빗 키의 이름을 구분하기 위해 키 이름 변경
 mv k8s/.vagrant/machines/node1/virtualbox/private_key -> k8s/.vagrant/machines/node1/virtualbox/node1_private_key
 mv k8s/.vagrant/machines/node2/virtualbox/private_key -> k8s/.vagrant/machines/node2/virtualbox/node2_private_key
