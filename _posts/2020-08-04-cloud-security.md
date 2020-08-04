@@ -282,7 +282,12 @@ var content = function(req, res) {
 var w = http.createServer(content);
 w.listen(8000);
 
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.0/install.sh | bash
+. ~/.nvm/nvm.sh
+nvm install 4.4.5
 
+node hello.js
+# 웹에서 본인 ip:8000로 확인해보기
 
 ```
 
