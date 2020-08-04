@@ -54,7 +54,7 @@ background: '/img/posts/03.jpg'
 |Namespace|쿠버네티스 클러스터 안의 가상 클러스터|
 |Pod|쿠버네티스에서 관리되는 최소 단위, 컨테이너의 실행 방법 정의(파드는 컨테이너 용어를 포함한다)|
 |Replica Set|같은 스펙을 갖는 파드를 여러 개 생성하고 관리하는 역할|
-|Deployment|레플리카 셋의 리비전을 관리|
+|Deployment|레플리카 셋의 리비전(수정 및 변경사항)을 관리|
 |Service|파드의 집합에 접근하기 위한 경로를 정의|
 |Ingress|파드에 대한 포트포워딩을 마친 뒤 외부에서 컨테이너 안으로 들어올 수 있게 쿠버네티스 클러스터를 외부로 노출하는 것|
 |ConfigMap|설정 정보를 정의하고 파드에 전달|
@@ -170,4 +170,124 @@ kubectl get pods --all-namespaces
 
 * 초기화 작업 중 오류 발생시 kubeadm reset하고 다시 수행하기  
 
+* 시스템이 강제 종료되어 다시 쿠버네티스 클러스터 접속 시 마스터는 문제 없으나 워커들이 문제가 있어 systemctl restart kubelet로 해결  
+
+* 시스템이 강제 종료되어 k8s 대시보드도 문제 발생(외부 접속 안됨)  
+
+  ```shell
+    # 확인
+    kubectl get svc kubernetes-dashboard -n kube-system  
+    # 아래 코드 다시 수행  
+    nohup kubectl proxy --port=8000 --address=192.168.56.14 --accept-hosts='^*$' >/dev/null 2>&1 &
+    kubectl get svc kubernetes-dashboard -n kube-system  
+  ```
+
 ## AWS  
+
+### 01 운영 서버와 AWS 소개  
+
+* 운영 서버 : 개발이나 테스트 목적이 아닌 실제 사용자들을 대상으로 서비스하는 서버  
+
+  * 트래픽 대응도 해야하고 빠른 응답 속도와 높은 가용성을 보장해야 함  
+
+* 운영 서버 관리는 환경 구성, 코드 배포, 모니터링 세 단계로 나뉨  
+
+  * 환경 구성 : 서비스할 코드를 구동시킬 수 있는 서버 인프라를 구축하는 것  
+
+  * 코드 배포 : 구성한 환경에 최신 버전의 코드를 빠르고 안전하게 배포하는 것  
+
+  * 안정적인 서비스 운영을 위해 서버와 코드에 어떤 이상이 없는지 바로 파악하고 대응할 수 있게 도와주는 것  
+
+* 운영 서버 아키텍처  
+
+  * 단일 서버  
+
+  * 앱 / DB 서버 분리(3-tier 개발)  
+
+  * 서버 단위의 로드 밸런서  
+
+  * 서버 내 앱 단위의 로드 밸런서  
+
+* EC2(Elastic Compute Cloud) : 원하는 만큼 사용하고 쓴만큼 비용을 지불하는 온디맨드 형식의 가상 서버  
+
+  * AMI(Amazon Machine Image) : EC2 인스턴스의 기반이 되는 이미지  
+
+  * 보안 그룹(Security Group) : 보안을 위해 IP와 포트 번호를 이용해 정의해두는 서버 접속 규칙  
+
+  * 키 페어(Key Pair) : 서버에 접속하기 위한 열쇠, 공개 키 암호화 기법으로 서버에는 공개키(Public Key)를 두고 사용자는 개인키(Private Key)를 들고 접속  
+
+### 06 배포 자동화  
+
+* AWS IAM(Identity and Access Management) : 사용자 권한 제어 서비스  
+
+* 용어 : 권한, 정책, 사용자, 그룹, 역할  
+
+### 실습  
+
+* 루트 계정으로 접속  
+
+* IAM / 액세스 관리 / 그룹 생성  
+
+* 정책 연결(AmazonEC2FullAccess)  
+
+* 액세스 관리 / 사용자 생성 -> 액세스 유형 모두 체크, 콘솔 비밀번호는 지정 방식이며 고정  
+
+* 태그 : 키 = class, 값 = security  
+
+* ARN(리소스 아이디 값) 모든 리소스는 아이디 값을 부여받음  
+
+* IAM 사용자는 루트 계정 아래에 존재하며 루트 계정의 이메일만 존재, 별도의 로그인 주소를 부여받아 링크를 통해 접속하게 되어있음  
+
+* <https://github.com/joneconsulting/cloudcomputing/blob/master/aws/aws_account.md>에서 본인 IAM 계정과 링크 확인, (edu17_us_east_1/skinfosec1!)  
+
+* 인스턴스 생성 규칙 : 같은 지역 사용자들끼리는 인스턴스 만들면 함께 보이기 때문에 instance 이름 지을 때 본인을 구분할 수 있게 자신의 아이디를 앞에 붙일것(prefix)  
+
+* 인스턴스 / 인스턴스 시작
+
+  * 단계 1 : AMI 선택 -> Amazon Linux AMI 2018.03.0 (HVM), SSD Volume Type 선택  
+
+  * 단계 2 : 인스턴스 유형 선택 -> t2.micro(프리티어 사용 가능) 기본 값 선택 -> 다음 : 인스턴스 세부 정보 구성  
+
+  * 단계 3 : 인스턴스 세부 정보 구성 -> 변경사항 없음 -> 다음 : 스토리지 추가  
+
+  * 단계 4: 스토리지 추가 -> 변경사항 없음 -> 다음 : 태그 추가  
+
+  * 단계 5: 태그 추가 -> 변경사항 없음 -> 다음 : 보안 그룹 구성  
+
+  * 단계 6: 보안 그룹 구성 -> 소스 / 내 IP 선택 -> 규칙 추가(유형 선택 가능) -> 이름에 launch-wizard-1을 launch-wizard-이름으로 바꾸기(중복되면 안됨) -> Name을 sg-자기이름 으로 지정하기 -> 검토 및 시작  
+
+    * 인바운드 규칙 : 외부에서 인스턴스로 접근할 포트 열어주기  
+
+  * 단계 7: 인스턴스 시작 검토 -> 시작하기 -> 새 키페어 생성 -> 이름 지정하기 -> 키 페어 다운로드  
+
+    * Linux, MacOS는 키 페어 경로로 가서 chmod 400 키페어 해줘야함, 윈도우는 제외  
+
+* 인스턴스 / 본인 인스턴스 선택 후 작업 / 인스턴스 중지  
+
+* 윈도우에서 연결 -> XShell 사용 -> 새 세션 등록 정보 이름(ec2-amazon linux), 호스트(자신의 퍼블릭 ip) -> 연결 / 사용자 키 -> 자신의 pem 파일 선택 후 열기 -> 연결  
+
+* private IP : 프라이빗 네트워크 내에서 서로 통신하기 위해 필요한 IP 주소  
+
+* 서비스 테스트  
+
+```shell
+# nodejs 서버 띄우기
+vi hello.js
+var http = require('http');
+var content = function(req, res) {
+    res.end("Hello Kubernetes!" + "\n");
+    res.writeHead(200);
+}
+
+var w = http.createServer(content);
+w.listen(8000);
+
+
+
+```
+
+### MSA와 서버리스  
+
+* MSA :  
+
+* 서버리스 컴퓨팅 : IT 인프라를 데이터 센터 혹은 클라우드에 별도의 준비 없이, 필요한 기능을 함수 형태로 구현하고, 오토 스케일링 방식으로 시시각각 변하는 자원 수요를 지원하며 전통적인 백엔드를 사용(FaaS, Function as a Service or BaaS, Backend as a Service)  
