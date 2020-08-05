@@ -4,3 +4,4 @@ node_modules
 Gemfile.lock
 *.gem
 auto_push_msg_branch
+.DS_Store
