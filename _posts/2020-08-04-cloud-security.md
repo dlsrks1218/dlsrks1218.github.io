@@ -146,12 +146,18 @@ kubectl run nginx-test --image=nginx --port 80 --generator=run-pod/v1
 ## Service 실행
 kubectl expose pod nginx-test
 kubectl get services
+## Pod 상세정보 확인
+kubectl describe pod nginx-test
 ## Service Type 변경
 kubectl edit service nginx-test # (ClusterIp -> NodePort)
+Spec의 type: NodePort
+kubectl edit service nginx-test # 다시 확인해 포워딩된 포트 사용
 ## 확인 (port는 service에서 forwarding 된 port 사용)
 http://192.168.56.10:30039/ # (<- port forwarding)
 http://192.168.56.11:30039/ # (<- port forwarding)
 ```  
+
+* 대시보드에서 파드 > 편집 눌러보면 파드를 정의해놓은 yaml 파일을 확인할 수 있음  
 
 * 자주 사용하는 명령어  
 
@@ -162,6 +168,8 @@ kubectl apply -f ~
 kubectl get nodes
 # k8s 클러스터가 기동중인 파드들을 모두 확인
 kubectl get pods --all-namespaces
+# kube-system이라는 namespace안의 pod에 대해 조사 수행(crash와 같은 오류의 이유 찾기)
+kubectl describe pod <pod 이름> --namespace=kube-system
 ```  
 
 ### 이슈  
@@ -170,17 +178,198 @@ kubectl get pods --all-namespaces
 
 * 초기화 작업 중 오류 발생시 kubeadm reset하고 다시 수행하기  
 
-* 시스템이 강제 종료되어 다시 쿠버네티스 클러스터 접속 시 마스터는 문제 없으나 워커들이 문제가 있어 systemctl restart kubelet로 해결  
+* 시스템이 강제 종료되어 다시 쿠버네티스 클러스터 접속 시 모든 노드가 not ready 상태가 되므로 **systemctl restart kubelet**로 해결  
 
 * 시스템이 강제 종료되어 k8s 대시보드도 문제 발생(외부 접속 안됨)  
 
   ```shell
     # 확인
     kubectl get svc kubernetes-dashboard -n kube-system  
+    # 워커 노드들에 모두 k8s 엔진 재시작
+    systemctl restart kubelet
     # 아래 코드 다시 수행  
     nohup kubectl proxy --port=8000 --address=192.168.56.14 --accept-hosts='^*$' >/dev/null 2>&1 &
     kubectl get svc kubernetes-dashboard -n kube-system  
   ```
+
+### 실습 - 쿠버네티스에서 nodejs 배포 20200805  
+
+```shell
+# manager
+$ mkdir work && cd work
+$ vi hello.js
+var http = require('http');
+var content = function(req, resp) {
+  resp.end("Hello, k8s!" + "\n");
+  resp.writeHead(200);
+}
+var w = http.createServer(content);
+w.listen(8000);
+
+$ vi Dockerfile
+FROM node:slim
+EXPOSE 8000
+COPY hello.js .
+CMD node hello.js
+
+# test - docker run -d -p 9000:8000 dlsrks1218/hello
+docker build -t dlsrks1218/hello .
+docker push dlsrks1218/hello
+
+# Dashboard로 이동해서 파드 생성하거나 터미널로 yml 파일을 통해 파드 생성
+<+ 생성> 클릭 -> yml 파일 생성
+$ vi hello-pod.yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hello-pod
+  labels:
+    app: hello
+spec:
+  containers:
+  - name: hello-container
+    image: dlsrks1218/hello
+    ports:
+    - containerPort: 8000
+
+kubectl apply -f hello-pod.yml
+kubectl get pods
+
+$ vi hello-service.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-svc
+  labels:
+    app: hello
+spec:
+  selector:
+    app: hello
+  ports:
+    - port: 9000
+    - targetPort: 8000
+  type: NodePort
+
+$ v1 pod-1.yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-1
+spec:
+  containers:
+  - name: container1
+    image: kubetm/p8000
+    ports:
+    - containerPort: 8000
+  - name: container2
+    image: kubetm/p8080
+    ports:
+    - containerPort: 8080
+
+$ kubectl apply -f xxx.yml
+$ kubectl get pods
+
+curl -X GET http://localhost:8000
+curl -X GET http://localhost:8080
+```
+
+* 대시보드에서 pod 1~6 생성, service 1~2 생성  
+
+```shell
+$ vi pod-1.yml # pod-1~6까지 생성
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-1
+  labels:
+    type: web
+    lo: dev
+spec:
+  containers:
+  - name: container
+    image: kubetm/init
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-2
+  labels:
+    type: db
+    lo: dev
+spec:
+  containers:
+  - name: container
+    image: kubetm/init
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-3
+  labels:
+    type: server
+    lo: dev
+spec:
+  containers:
+  - name: container
+    image: kubetm/init
+  
+$ vi svc-1.yml # svc-1~2까지 생성
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-1
+spec:
+  selector:
+    type: web
+  ports:
+    - port: 80
+
+$ vi svc-2.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-2
+spec:
+  selector:
+    type: db
+  ports:
+    - port: 3306
+```
+
+### 이슈 20200805  
+
+* 파드 생성 먼저하고 서비스를 생성하여 포트 포워딩 해주어야 서비스에 정의된 포트포워딩이나 여타의 설정들이 적용이 됨  
+
+* **pod 생성하고 서비스를 생성하면 ClusterIP가 자동으로 부어되고 NodePort를 지정해주지 않으면 임의의 노드포트로 포트포워딩이 된다. 그 결과 클라이언트가 특정 노드의 파드에 위에서 지정된 노드포트 번호를 통해 파드 안의 컨테이너로 보내준다. 혹은 별도로 포트포워딩 해준 <포트>가 있다면 클러스터ip:<포트>로 접근가능하다.**  
+
+  ```shell
+  kubectl get services hello-svc
+  NAME        TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
+  hello-svc   NodePort   10.96.54.119   <none>        9000:30165/TCP   7m36s
+
+  $ curl -X GET http://10.96.54.119:30165
+  Hello, k8s!
+  $ curl -X GET http://10.96.54.119:9000
+  Hello, k8s!
+  ```
+
+  * 위에 보이는 PORT(S)에서 9000은 Service가 생성되면서 자동으로 할당된 클러스터 ip의 9000번을 호출하면 hello-svc가 적용되는 Pod의 8000번 컨테이너로 보내줌  
+
+  * 30165는 hello-svc가 자동으로 생성한 NodePort 번호로 해당 노드의 NodePort번호(30165)로 접근하면 Pod내 컨테이너의 8000번 포트로 보내줌  
+
+  * NodeIP:<NodePort에 의해 생성된 임의의 포트>  
+
+  * Service의 ClusterIP:<직접 포워딩해준 포트>  
+
+    * kubectl get services hello-svc -> Cluster IP를 알아내기  
+
+  * 이 두가지의 방법으로 접근 가능하다  
+
+  * 출처 : <https://bcho.tistory.com/1262>  
+
+* **위 같은 상황에서 외부로 노출하기 위해서는 LoadBalancer를 활용하거나 ExternalEndpoint를 지정해주어야 함**  
 
 ## AWS  
 
@@ -272,23 +461,22 @@ kubectl get pods --all-namespaces
 
 ```shell
 # nodejs 서버 띄우기
-vi hello.js
+$ vi hello.js
 var http = require('http');
 var content = function(req, res) {
     res.end("Hello Kubernetes!" + "\n");
     res.writeHead(200);
 }
-
 var w = http.createServer(content);
 w.listen(8000);
 
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.0/install.sh | bash
-. ~/.nvm/nvm.sh
-nvm install 4.4.5
-
+# amazon linux에 nodejs 설치
+$ curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.0/install.sh | bash
+$ . ~/.nvm/nvm.sh
+$ nvm install node
+# hello.js 실행
 node hello.js
 # 웹에서 본인 ip:8000로 확인해보기
-
 ```
 
 ### MSA와 서버리스  
