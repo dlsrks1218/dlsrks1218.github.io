@@ -369,7 +369,7 @@ spec:
 
   * 출처 : <https://bcho.tistory.com/1262>  
 
-* **위 같은 상황에서 외부로 노출하기 위해서는 LoadBalancer를 활용하거나 ExternalEndpoint를 지정해주어야 함**  
+* **위 같은 상황에서 외부로 노출하기 위해서는 Service의 type을 LoadBalancer나 ExternalName로 지정해주어야 함**  
 
 ## AWS  
 
