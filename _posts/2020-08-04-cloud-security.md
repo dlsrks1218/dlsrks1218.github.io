@@ -155,6 +155,11 @@ kubectl edit service nginx-test # 다시 확인해 포워딩된 포트 사용
 ## 확인 (port는 service에서 forwarding 된 port 사용)
 http://192.168.56.10:30039/ # (<- port forwarding)
 http://192.168.56.11:30039/ # (<- port forwarding)
+
+# 5. 각 쉘에 맞는 자동완성 추가
+echo 'source <(kubectl completion bash)' >>~/.bashrc
+echo 'source <(kubectl completion zsh)' >>~/.zshrc
+
 ```  
 
 * 대시보드에서 파드 > 편집 눌러보면 파드를 정의해놓은 yaml 파일을 확인할 수 있음  
@@ -478,6 +483,7 @@ $ nvm install node
 node hello.js
 # 웹에서 본인 ip:8000로 확인해보기
 ```
+
 
 ### MSA와 서버리스  
 

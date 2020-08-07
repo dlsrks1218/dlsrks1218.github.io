@@ -124,6 +124,8 @@ app.get('/health', (req, res) => {
 app.listen(app.get('port'), () => {
   console.log('Express server listening on port ' + app.get('port'));
 });
+
+# 서버 시작시 nodejs 띄우려면 /etc/init.d에 추가하면 됨
 ```
 
 ## 다중 서버 환경 구성  
